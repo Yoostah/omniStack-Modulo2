@@ -156,7 +156,14 @@ class AppointmentController {
     await Mail.sendMail({
       to: `${appointment.provider.name} <${appointment.provider.email}>`,
       subject: 'Agendamento Cancelado',
-      text: `O agendamento de ${appointment.user.name} foi cancelado!`,
+      template: 'cancellation',
+      context: {
+        provider: appointment.provider.name,
+        user: appointment.user.name,
+        date: format(appointment.date, "dd' de 'MMMM' / 'H:mm'", {
+          locale: pt,
+        }),
+      },
     });
     return res.json({ message: 'Appointment canceled!' });
   }
