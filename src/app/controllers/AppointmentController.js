@@ -5,6 +5,7 @@ import Appointment from '../models/Appointment';
 import User from '../models/User';
 import File from '../models/File';
 import Notification from '../schemas/NotificationSchema';
+import Mail from '../../lib/Mail';
 
 class AppointmentController {
   async index(req, res) {
@@ -116,6 +117,18 @@ class AppointmentController {
         id: req.params.id,
         canceled_at: null,
       },
+      include: [
+        {
+          model: User,
+          as: 'provider',
+          attributes: ['name', 'email'],
+        },
+        {
+          model: User,
+          as: 'user',
+          attributes: ['name'],
+        },
+      ],
     });
 
     if (!appointment) {
@@ -140,6 +153,11 @@ class AppointmentController {
     appointment.canceled_at = new Date();
     await appointment.save();
 
+    await Mail.sendMail({
+      to: `${appointment.provider.name} <${appointment.provider.email}>`,
+      subject: 'Agendamento Cancelado',
+      text: `O agendamento de ${appointment.user.name} foi cancelado!`,
+    });
     return res.json({ message: 'Appointment canceled!' });
   }
 }
